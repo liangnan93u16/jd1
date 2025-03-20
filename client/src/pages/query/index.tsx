@@ -169,8 +169,8 @@ export default function QueryPage() {
     },
     {
       header: "备件名称",
-      accessorKey: "sparePartName",
-      cell: (row: ExtendedAssociation) => row.sparePartName || "-",
+      accessorKey: "materialCode",
+      cell: (row: ExtendedAssociation) => row.materialCode || "-",
     },
     {
       header: "规格型号",

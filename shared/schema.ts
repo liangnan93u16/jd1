@@ -247,7 +247,7 @@ export const extendedAssociationSchema = z.object({
   componentName: z.string(),
   importanceLevel: z.enum(['A', 'B', 'C']),
   materialCode: z.string(),
-  sparePartName: z.string(),
+  sparePartCode: z.string().optional(),
   specification: z.string().nullable(),
   manufacturer: z.string(),
   createdAt: z.date().or(z.string()),
