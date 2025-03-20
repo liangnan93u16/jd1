@@ -18,16 +18,16 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { LoadingSpinner } from "@/components/common/loading-spinner";
 import { useToast } from "@/hooks/use-toast";
-import type { ExtendedAssociation } from "@shared/schema";
+import type { Base, EquipmentType, ExtendedAssociation, Workshop } from "@shared/schema";
 
 export default function QueryPage() {
   const { toast } = useToast();
   
   // Query parameters
   const [queryType, setQueryType] = useState<'association' | 'supplier'>('association');
-  const [baseId, setBaseId] = useState<string>('');
-  const [workshopId, setWorkshopId] = useState<string>('');
-  const [typeId, setTypeId] = useState<string>('');
+  const [baseId, setBaseId] = useState<string>('all');
+  const [workshopId, setWorkshopId] = useState<string>('all');
+  const [typeId, setTypeId] = useState<string>('all');
   const [importanceLevels, setImportanceLevels] = useState<string[]>(['A', 'B']);
   const [supplyCycleRange, setSupplyCycleRange] = useState<[string, string]>(['', '']);
   const [isCustom, setIsCustom] = useState<string>('all');
@@ -37,15 +37,15 @@ export default function QueryPage() {
   const [hasSubmitted, setHasSubmitted] = useState(false);
   
   // Fetch base data for filters
-  const { data: bases } = useQuery({
+  const { data: bases = [] } = useQuery<Base[]>({
     queryKey: ["/api/bases"],
   });
 
   // Fetch workshop data based on selected base
-  const { data: workshops } = useQuery({
+  const { data: workshops = [] } = useQuery<Workshop[]>({
     queryKey: ["/api/workshops", baseId],
     queryFn: async () => {
-      const url = baseId 
+      const url = baseId && baseId !== 'all'
         ? `/api/workshops?baseId=${baseId}`
         : "/api/workshops";
       const res = await fetch(url);
@@ -55,7 +55,7 @@ export default function QueryPage() {
   });
 
   // Fetch equipment type data for filters
-  const { data: equipmentTypes } = useQuery({
+  const { data: equipmentTypes = [] } = useQuery<EquipmentType[]>({
     queryKey: ["/api/equipment-types"],
   });
   
@@ -71,9 +71,9 @@ export default function QueryPage() {
       
       const params = new URLSearchParams();
       
-      if (baseId) params.append("baseId", baseId);
-      if (workshopId) params.append("workshopId", workshopId);
-      if (typeId) params.append("typeId", typeId);
+      if (baseId && baseId !== 'all') params.append("baseId", baseId);
+      if (workshopId && workshopId !== 'all') params.append("workshopId", workshopId);
+      if (typeId && typeId !== 'all') params.append("typeId", typeId);
       
       if (importanceLevels.length > 0) {
         params.append("importanceLevel", importanceLevels.join(','));
@@ -121,9 +121,9 @@ export default function QueryPage() {
   
   // Handle reset filters
   const handleReset = () => {
-    setBaseId('');
-    setWorkshopId('');
-    setTypeId('');
+    setBaseId('all');
+    setWorkshopId('all');
+    setTypeId('all');
     setImportanceLevels(['A', 'B']);
     setSupplyCycleRange(['', '']);
     setIsCustom('all');
@@ -246,7 +246,7 @@ export default function QueryPage() {
                       <SelectValue placeholder="全部基地" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">全部基地</SelectItem>
+                      <SelectItem value="all">全部基地</SelectItem>
                       {bases?.map((base: any) => (
                         <SelectItem key={base.baseId} value={base.baseId.toString()}>
                           {base.baseName}
@@ -267,7 +267,7 @@ export default function QueryPage() {
                       <SelectValue placeholder="全部车间" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">全部车间</SelectItem>
+                      <SelectItem value="all">全部车间</SelectItem>
                       {workshops?.filter((w: any) => 
                         !baseId || w.baseId.toString() === baseId
                       ).map((workshop: any) => (
@@ -289,7 +289,7 @@ export default function QueryPage() {
                       <SelectValue placeholder="全部类型" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">全部类型</SelectItem>
+                      <SelectItem value="all">全部类型</SelectItem>
                       {equipmentTypes?.map((type: any) => (
                         <SelectItem key={type.typeId} value={type.typeId.toString()}>
                           {type.typeName}
