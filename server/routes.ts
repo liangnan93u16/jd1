@@ -11,7 +11,9 @@ import {
   insertComponentSchema,
   insertSparePartSchema,
   insertSparePartSupplierSchema,
-  insertEquipmentComponentSparePartSchema
+  insertEquipmentComponentSparePartSchema,
+  SparePart,
+  EquipmentComponentSparePart
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -716,7 +718,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           name: component.componentName,
           type: "部件",
           data: component,
-          children: spareParts.map(({ sparePart, association }) => ({
+          children: spareParts.map(({ sparePart, association }: { sparePart: SparePart, association: EquipmentComponentSparePart }) => ({
             id: sparePart.sparePartId,
             name: sparePart.sparePartName,
             type: "备件",

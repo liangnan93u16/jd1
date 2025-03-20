@@ -423,7 +423,11 @@ export default function EquipmentPage() {
             </DialogTitle>
           </DialogHeader>
           <EquipmentForm
-            defaultValues={selectedEquipment || undefined}
+            defaultValues={selectedEquipment ? {
+              equipmentName: selectedEquipment.equipmentName,
+              workshopId: selectedEquipment.workshopId.toString(),
+              typeId: selectedEquipment.typeId.toString()
+            } : undefined}
             equipmentId={selectedEquipment?.equipmentId}
             onSuccess={handleFormClose}
           />
@@ -438,6 +442,15 @@ export default function EquipmentPage() {
         description={`您确定要删除设备 "${selectedEquipment?.equipmentName}" 吗？此操作不可撤销，且可能影响关联的部件和备件信息。`}
         onConfirm={confirmDelete}
         loading={deleteMutation.isPending}
+      />
+      
+      {/* Tree View Dialog */}
+      <TreeViewDialog
+        open={treeViewOpen}
+        onOpenChange={handleTreeViewClose}
+        title={`设备结构: ${equipmentResponse?.data?.find((e: ExtendedEquipment) => e.equipmentId === viewingEquipmentId)?.equipmentName || ''}`}
+        data={equipmentHierarchy ? [equipmentHierarchy] : null}
+        isLoading={isLoadingHierarchy}
       />
     </Layout>
   );
