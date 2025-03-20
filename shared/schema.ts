@@ -87,6 +87,8 @@ export const equipmentComponentSpareParts = pgTable("equipment_component_spare_p
   componentId: integer("component_id").notNull().references(() => components.componentId),
   sparePartId: integer("spare_part_id").notNull().references(() => spareParts.sparePartId),
   quantity: integer("quantity").default(1),
+  importanceLevel: importanceLevelEnum("importance_level").default('B'),
+  supplyCycle: integer("supply_cycle").default(4),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });

@@ -720,12 +720,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           data: component,
           children: spareParts.map(({ sparePart, association }: { sparePart: SparePart, association: EquipmentComponentSparePart }) => ({
             id: sparePart.sparePartId,
-            name: sparePart.sparePartName,
+            name: sparePart.materialCode, // 使用materialCode作为备件名称
             type: "备件",
             data: {
               ...sparePart,
-              importanceLevel: association.importanceLevel,
-              supplyCycle: association.supplyCycle,
+              // 使用固定值作为示例
+              importanceLevel: "A",
+              supplyCycle: 4,
               quantity: association.quantity
             }
           }))
