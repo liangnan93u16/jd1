@@ -736,6 +736,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Base hierarchy endpoint
+  app.get("/api/hierarchy/base/:baseId", async (req: Request, res: Response) => {
+    try {
+      const baseId = parseInt(req.params.baseId);
+      if (isNaN(baseId)) {
+        return res.status(400).json({ error: "Invalid base ID" });
+      }
+
+      // Get base
+      const base = await storage.getBase(baseId);
+      if (!base) {
+        return res.status(404).json({ error: "Base not found" });
+      }
+
+      // Get workshops in this base
+      const workshops = await storage.getWorkshops(baseId);
+      
+      // For each workshop, get equipment
+      const workshopNodes = await Promise.all(
+        workshops.map(async (workshop) => {
+          // Get equipment for this workshop
+          const equipmentList = await storage.getEquipments({ 
+            workshopId: workshop.workshopId,
+            limit: 1000  // Set high limit to get all equipment
+          });
+          
+          // Map equipment to tree nodes
+          const equipmentNodes = equipmentList.data.map(equipment => ({
+            id: `equipment-${equipment.equipmentId}`,
+            name: equipment.equipmentName,
+            type: "设备",
+            data: equipment,
+            children: []
+          }));
+          
+          return {
+            id: `workshop-${workshop.workshopId}`,
+            name: workshop.workshopName,
+            type: "车间",
+            data: workshop,
+            children: equipmentNodes
+          };
+        })
+      );
+      
+      // Build hierarchy
+      const hierarchy = {
+        id: `base-${base.baseId}`,
+        name: base.baseName,
+        type: "基地",
+        data: base,
+        children: workshopNodes
+      };
+      
+      res.json(hierarchy);
+    } catch (err) {
+      handleErrors(err as Error, res);
+    }
+  });
+
   // Create and return the HTTP server
   const httpServer = createServer(app);
   return httpServer;

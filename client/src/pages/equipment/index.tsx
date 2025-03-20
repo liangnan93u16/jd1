@@ -16,15 +16,19 @@ import { EquipmentForm } from "@/components/forms/equipment-form";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, Pencil, Trash2, Plus, Search, X } from "lucide-react";
+import { Eye, Pencil, Trash2, Plus, Search, X, ListTree } from "lucide-react";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
+import { TreeViewDialog } from "@/components/common/tree-view-dialog";
 import { formatDate } from "@/lib/utils";
 import type { ExtendedEquipment, Base, EquipmentType, Workshop } from "@shared/schema";
+import type { TreeNode } from "@/components/ui/tree-view";
 
 export default function EquipmentPage() {
   const [openForm, setOpenForm] = useState(false);
   const [selectedEquipment, setSelectedEquipment] = useState<ExtendedEquipment | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [treeViewOpen, setTreeViewOpen] = useState(false);
+  const [viewingEquipmentId, setViewingEquipmentId] = useState<number | null>(null);
   
   // Filters and pagination
   const [filters, setFilters] = useState({
@@ -98,6 +102,18 @@ export default function EquipmentPage() {
       if (!res.ok) throw new Error("Failed to fetch equipment");
       return res.json();
     },
+  });
+
+  // Fetch equipment hierarchy data
+  const { data: equipmentHierarchy, isLoading: isLoadingHierarchy } = useQuery<TreeNode>({
+    queryKey: ["/api/hierarchy/equipment", viewingEquipmentId],
+    queryFn: async () => {
+      if (!viewingEquipmentId) return null;
+      const res = await fetch(`/api/hierarchy/equipment/${viewingEquipmentId}`);
+      if (!res.ok) throw new Error("Failed to fetch equipment hierarchy");
+      return res.json();
+    },
+    enabled: !!viewingEquipmentId && treeViewOpen,
   });
 
   // Define deletion mutation
@@ -222,6 +238,16 @@ export default function EquipmentPage() {
     if (selectedEquipment) {
       deleteMutation.mutate(selectedEquipment.equipmentId);
     }
+  };
+  
+  const handleViewTree = (equipment: ExtendedEquipment) => {
+    setViewingEquipmentId(equipment.equipmentId);
+    setTreeViewOpen(true);
+  };
+  
+  const handleTreeViewClose = () => {
+    setTreeViewOpen(false);
+    setViewingEquipmentId(null);
   };
 
   return (
@@ -353,6 +379,16 @@ export default function EquipmentPage() {
         onSortingChange={handleSortChange}
         rowActions={(row) => (
           <>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleViewTree(row);
+              }}
+            >
+              <ListTree className="h-4 w-4 mr-1" /> 备件结构
+            </Button>
             <Button
               variant="ghost"
               size="sm"
