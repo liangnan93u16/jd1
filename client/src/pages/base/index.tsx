@@ -18,6 +18,8 @@ export default function BasePage() {
   const [openForm, setOpenForm] = useState(false);
   const [selectedBase, setSelectedBase] = useState<Base | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [treeViewOpen, setTreeViewOpen] = useState(false);
+  const [viewingBaseId, setViewingBaseId] = useState<number | null>(null);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -25,6 +27,18 @@ export default function BasePage() {
   // Fetch data from API
   const { data: bases, isLoading } = useQuery<Base[]>({
     queryKey: ["/api/bases"],
+  });
+  
+  // Fetch base hierarchy data
+  const { data: baseHierarchy, isLoading: isLoadingHierarchy } = useQuery<TreeNode>({
+    queryKey: ["/api/hierarchy/base", viewingBaseId],
+    queryFn: async () => {
+      if (!viewingBaseId) return null;
+      const res = await fetch(`/api/hierarchy/base/${viewingBaseId}`);
+      if (!res.ok) throw new Error("Failed to fetch base hierarchy");
+      return res.json();
+    },
+    enabled: !!viewingBaseId && treeViewOpen,
   });
 
   // Define deletion mutation
@@ -99,6 +113,16 @@ export default function BasePage() {
       deleteMutation.mutate(selectedBase.baseId);
     }
   };
+  
+  const handleViewTree = (base: Base) => {
+    setViewingBaseId(base.baseId);
+    setTreeViewOpen(true);
+  };
+  
+  const handleTreeViewClose = () => {
+    setTreeViewOpen(false);
+    setViewingBaseId(null);
+  };
 
   return (
     <Layout
@@ -125,6 +149,16 @@ export default function BasePage() {
         isLoading={isLoading}
         rowActions={(row) => (
           <>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleViewTree(row);
+              }}
+            >
+              <ListTree className="h-4 w-4 mr-1" /> 查看结构
+            </Button>
             <Button
               variant="ghost"
               size="sm"
@@ -174,6 +208,15 @@ export default function BasePage() {
         description={`您确定要删除基地 "${selectedBase?.baseName}" 吗？此操作不可撤销，且可能影响关联的车间和设备。`}
         onConfirm={confirmDelete}
         loading={deleteMutation.isPending}
+      />
+
+      {/* Tree View Dialog */}
+      <TreeViewDialog
+        open={treeViewOpen}
+        onOpenChange={handleTreeViewClose}
+        title={`基地结构: ${bases?.find(b => b.baseId === viewingBaseId)?.baseName || ''}`}
+        data={baseHierarchy ? [baseHierarchy] : null}
+        isLoading={isLoadingHierarchy}
       />
     </Layout>
   );
