@@ -73,6 +73,8 @@ export default function EquipmentPage() {
   const { data: equipmentTypes } = useQuery<EquipmentType[]>({
     queryKey: ["/api/equipment-types"],
   });
+  
+
 
   // Fetch equipment data with pagination and filters
   const { data: equipmentResponse, isLoading: isLoadingEquipment } = useQuery({
@@ -105,7 +107,10 @@ export default function EquipmentPage() {
   });
 
   // Fetch equipment hierarchy data
-  const { data: equipmentHierarchy, isLoading: isLoadingHierarchy } = useQuery<TreeNode>({
+  const { 
+    data: equipmentHierarchy, 
+    isLoading: isLoadingHierarchy 
+  } = useQuery<TreeNode>({
     queryKey: ["/api/hierarchy/equipment", viewingEquipmentId],
     queryFn: async () => {
       if (!viewingEquipmentId) return null;
