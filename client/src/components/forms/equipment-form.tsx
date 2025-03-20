@@ -207,7 +207,7 @@ export function EquipmentForm({
                         </>
                       )}
                     </React.Fragment>
-                  )) : <SelectItem value="">无可用数据</SelectItem>}
+                  )) : <div className="px-2 py-1 text-xs text-gray-500">无可用数据</div>}
                 </SelectContent>
               </Select>
               <FormDescription>
@@ -241,7 +241,7 @@ export function EquipmentForm({
                     >
                       {type.typeName}
                     </SelectItem>
-                  )) : <SelectItem value="">无可用数据</SelectItem>}
+                  )) : <div className="px-2 py-1 text-xs text-gray-500">无可用数据</div>}
                 </SelectContent>
               </Select>
               <FormDescription>

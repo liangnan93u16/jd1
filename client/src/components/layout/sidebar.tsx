@@ -34,7 +34,7 @@ function NavItem({ href, icon, children, indented = false, onClick }: NavItemPro
 
   return (
     <Link href={href}>
-      <a
+      <div
         className={cn(
           "flex items-center py-2 px-3 rounded-md text-sm font-medium",
           isActive
@@ -46,7 +46,7 @@ function NavItem({ href, icon, children, indented = false, onClick }: NavItemPro
       >
         <span className="mr-3 text-xl">{icon}</span>
         {children}
-      </a>
+      </div>
     </Link>
   );
 }
