@@ -25,7 +25,7 @@ export default function WorkshopPage() {
   const [openForm, setOpenForm] = useState(false);
   const [selectedWorkshop, setSelectedWorkshop] = useState<Workshop | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [baseFilter, setBaseFilter] = useState<string>("");
+  const [baseFilter, setBaseFilter] = useState<string>("all");
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -34,9 +34,9 @@ export default function WorkshopPage() {
   const { data: workshops, isLoading: isLoadingWorkshops } = useQuery<Workshop[]>({
     queryKey: ["/api/workshops", baseFilter],
     queryFn: async () => {
-      const url = baseFilter 
-        ? `/api/workshops?baseId=${baseFilter}`
-        : "/api/workshops";
+      const url = baseFilter === "all"
+        ? "/api/workshops"
+        : `/api/workshops?baseId=${baseFilter}`;
       const res = await fetch(url);
       if (!res.ok) throw new Error("Failed to fetch workshops");
       return res.json();
@@ -186,7 +186,7 @@ export default function WorkshopPage() {
                 <SelectValue placeholder="所有基地" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">所有基地</SelectItem>
+                <SelectItem value="all">所有基地</SelectItem>
                 {bases?.map((base) => (
                   <SelectItem key={base.baseId} value={base.baseId.toString()}>
                     {base.baseName}
@@ -238,7 +238,11 @@ export default function WorkshopPage() {
             </DialogTitle>
           </DialogHeader>
           <WorkshopForm
-            defaultValues={selectedWorkshop || undefined}
+            defaultValues={selectedWorkshop ? {
+              workshopName: selectedWorkshop.workshopName,
+              baseId: selectedWorkshop.baseId.toString(),
+              busyLevel: selectedWorkshop.busyLevel
+            } : undefined}
             workshopId={selectedWorkshop?.workshopId}
             onSuccess={handleFormClose}
           />
