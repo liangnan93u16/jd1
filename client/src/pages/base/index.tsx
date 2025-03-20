@@ -7,10 +7,12 @@ import { BaseForm } from "@/components/forms/base-form";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Eye, Pencil, Trash2, Plus } from "lucide-react";
+import { Eye, Pencil, Trash2, Plus, ListTree } from "lucide-react";
 import { ConfirmDialog } from "@/components/common/confirm-dialog";
+import { TreeViewDialog } from "@/components/common/tree-view-dialog";
 import { formatDate } from "@/lib/utils";
 import type { Base } from "@shared/schema";
+import type { TreeNode } from "@/components/ui/tree-view";
 
 export default function BasePage() {
   const [openForm, setOpenForm] = useState(false);

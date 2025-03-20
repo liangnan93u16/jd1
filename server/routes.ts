@@ -618,6 +618,124 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Hierarchy APIs for tree views
+  
+  // API to get base hierarchy (base > workshops > equipment)
+  app.get("/api/hierarchy/base/:id", async (req, res) => {
+    try {
+      const baseId = parseInt(req.params.id);
+      const base = await storage.getBase(baseId);
+      
+      if (!base) {
+        return res.status(404).json({ error: "Base not found" });
+      }
+      
+      // Get all workshops for this base
+      const workshops = await storage.getWorkshops(baseId);
+      
+      // Build hierarchy
+      const hierarchy = {
+        id: base.baseId,
+        name: base.baseName,
+        type: "基地",
+        data: base,
+        children: await Promise.all(workshops.map(async (workshop) => {
+          // Get equipment for each workshop
+          const equipmentResponse = await storage.getEquipments({ 
+            workshopId: workshop.workshopId,
+            limit: 100, // Large enough for all equipment
+          });
+          
+          return {
+            id: workshop.workshopId,
+            name: workshop.workshopName,
+            type: "车间",
+            data: workshop,
+            children: equipmentResponse.data.map(equipment => ({
+              id: equipment.equipmentId,
+              name: equipment.equipmentName,
+              type: "设备",
+              data: equipment,
+            }))
+          };
+        }))
+      };
+      
+      res.json(hierarchy);
+    } catch (err) {
+      handleErrors(err as Error, res);
+    }
+  });
+  
+  // API to get equipment hierarchy (equipment > components > spare parts)
+  app.get("/api/hierarchy/equipment/:id", async (req, res) => {
+    try {
+      const equipmentId = parseInt(req.params.id);
+      const equipment = await storage.getEquipment(equipmentId);
+      
+      if (!equipment) {
+        return res.status(404).json({ error: "Equipment not found" });
+      }
+      
+      // Get all associations for this equipment
+      const associations = await storage.getAssociations({ equipmentId });
+      
+      // Group associations by component
+      const componentsMap = new Map();
+      
+      for (const assoc of associations) {
+        if (!componentsMap.has(assoc.componentId)) {
+          const component = await storage.getComponent(assoc.componentId);
+          if (component) {
+            componentsMap.set(assoc.componentId, {
+              component,
+              spareParts: []
+            });
+          }
+        }
+        
+        if (componentsMap.has(assoc.componentId)) {
+          const sparePart = await storage.getSparePart(assoc.sparePartId);
+          if (sparePart) {
+            componentsMap.get(assoc.componentId).spareParts.push({
+              sparePart,
+              association: assoc
+            });
+          }
+        }
+      }
+      
+      // Build hierarchy
+      const hierarchy = {
+        id: equipment.equipmentId,
+        name: equipment.equipmentName,
+        type: "设备",
+        data: equipment,
+        children: Array.from(componentsMap.entries()).map(([componentId, { component, spareParts }]) => ({
+          id: componentId,
+          name: component.componentName,
+          type: "部件",
+          data: component,
+          children: spareParts.map(({ sparePart, association }) => ({
+            id: sparePart.sparePartId,
+            name: sparePart.sparePartName,
+            type: "备件",
+            data: {
+              ...sparePart,
+              importanceLevel: association.importanceLevel,
+              supplyCycle: association.supplyCycle,
+              quantity: association.quantity
+            }
+          }))
+        }))
+      };
+      
+      res.json(hierarchy);
+    } catch (err) {
+      handleErrors(err as Error, res);
+    }
+  });
+
   // Create and return the HTTP server
   const httpServer = createServer(app);
   return httpServer;
