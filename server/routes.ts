@@ -540,9 +540,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/associations", async (req, res) => {
     try {
       const params = {
-        equipmentId: req.query.equipmentId ? parseInt(req.query.equipmentId as string) : undefined,
-        componentId: req.query.componentId ? parseInt(req.query.componentId as string) : undefined,
-        sparePartId: req.query.sparePartId ? parseInt(req.query.sparePartId as string) : undefined,
+        equipmentId: req.query.equipmentId && req.query.equipmentId !== 'all' ? 
+          parseInt(req.query.equipmentId as string) : undefined,
+        componentId: req.query.componentId && req.query.componentId !== 'all' ? 
+          parseInt(req.query.componentId as string) : undefined,
+        sparePartId: req.query.sparePartId && req.query.sparePartId !== 'all' ? 
+          parseInt(req.query.sparePartId as string) : undefined,
         importanceLevel: req.query.importanceLevel ? (req.query.importanceLevel as string).split(',') : undefined,
         supplyCycleRange: req.query.supplyCycleRange ? 
           (req.query.supplyCycleRange as string).split(',').map(Number) as [number, number] : 

@@ -28,9 +28,9 @@ export default function AssociationPage() {
   
   // Filters
   const [filters, setFilters] = useState({
-    equipmentId: "",
-    componentId: "",
-    sparePartId: "",
+    equipmentId: "all",
+    componentId: "all",
+    sparePartId: "all",
   });
   
   const { toast } = useToast();
@@ -156,9 +156,9 @@ export default function AssociationPage() {
 
   const handleResetFilters = () => {
     setFilters({
-      equipmentId: "",
-      componentId: "",
-      sparePartId: "",
+      equipmentId: "all",
+      componentId: "all",
+      sparePartId: "all",
     });
   };
 
@@ -169,7 +169,15 @@ export default function AssociationPage() {
   };
 
   const handleEditAssociation = (association: ExtendedAssociation) => {
-    setSelectedAssociation(association);
+    // 将数字ID转换为字符串，以兼容表单组件的期望类型
+    const formattedAssociation = {
+      ...association,
+      equipmentId: association.equipmentId.toString(),
+      componentId: association.componentId.toString(),
+      sparePartId: association.sparePartId.toString(),
+      quantity: association.quantity
+    };
+    setSelectedAssociation(formattedAssociation as any);
     setOpenForm(true);
   };
 
@@ -223,8 +231,8 @@ export default function AssociationPage() {
                 <SelectValue placeholder="全部设备" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部设备</SelectItem>
-                {equipment?.data?.map((equip: any) => (
+                <SelectItem value="all">全部设备</SelectItem>
+                {(equipment?.data || [])?.map((equip: any) => (
                   <SelectItem key={equip.equipmentId} value={equip.equipmentId.toString()}>
                     {equip.equipmentName}
                   </SelectItem>
@@ -243,8 +251,8 @@ export default function AssociationPage() {
                 <SelectValue placeholder="全部部件" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部部件</SelectItem>
-                {components?.map((component: any) => (
+                <SelectItem value="all">全部部件</SelectItem>
+                {(components || [])?.map((component: any) => (
                   <SelectItem key={component.componentId} value={component.componentId.toString()}>
                     {component.componentName}
                   </SelectItem>
@@ -263,8 +271,8 @@ export default function AssociationPage() {
                 <SelectValue placeholder="全部备件" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">全部备件</SelectItem>
-                {spareParts?.map((part: any) => (
+                <SelectItem value="all">全部备件</SelectItem>
+                {(spareParts || [])?.map((part: any) => (
                   <SelectItem key={part.sparePartId} value={part.sparePartId.toString()}>
                     {part.materialCode} - {part.description || part.specification || part.manufacturer}
                   </SelectItem>
